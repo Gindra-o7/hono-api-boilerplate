@@ -1,5 +1,5 @@
 {
-  "name": "hono-api-pmb-stie-mahardhika",
+  "name": "hono-api-boilerplate",
   "scripts": {
     "dev": "bun run --hot src/index.ts"
   },
