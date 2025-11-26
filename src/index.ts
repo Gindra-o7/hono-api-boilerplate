@@ -12,11 +12,16 @@ import fakultasRoute from "./routes/fakultas.route";
 const app: Hono<BlankEnv, BlankSchema, "/"> = new Hono({
   router: new RegExpRouter(),
 });
+// import { auth } from "./auth";
+
+// app.on(["POST", "GET"], "/api/auth/**", (c) => {
+//     return auth.handler(c.req.raw);
+// });
 const { APP_PORT }: NodeJS.ProcessEnv = process.env;
 
 // Load all available middlewares
 app.use("*", LogMiddleware.hanzLogger);
-app.use("*", AuthMiddleware.authenticateAndSyncUser);
+// app.use("*", AuthMiddleware.authenticateAndSyncUser);
 
 // Load all default routes for common handling
 app.notFound(GlobalHandler.notFound);

@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model universitas {
@@ -17,9 +16,6 @@ model universitas {
   updated_at DateTime?
 
   fakultas fakultas[]
-
-  createdBy akun? @relation("universitas_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("universitas_updated_by", fields: [updated_by], references: [id])
 
   @@map("universitas")
 }
@@ -34,443 +30,56 @@ model fakultas {
   updated_at     DateTime?
   id_universitas String
 
-  universitas   universitas     @relation(fields: [id_universitas], references: [id])
-  program_studi program_studi[]
-
-  createdBy akun? @relation("fakultas_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("fakultas_updated_by", fields: [updated_by], references: [id])
+  universitas universitas @relation(fields: [id_universitas], references: [id])
 
   @@map("fakultas")
 }
 
-model program_studi {
-  id          String    @id @default(uuid())
-  kode        String    @unique @db.VarChar(10)
-  nama        String    @unique @db.VarChar(60)
-  created_by  String?   @db.Uuid
-  updated_by  String?   @db.Uuid
-  created_at  DateTime  @default(now())
-  updated_at  DateTime?
-  id_fakultas String
+model User {
+  id            String    @id @default(uuid())
+  name          String    @db.VarChar(255)
+  email         String    @unique @db.VarChar(225)
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt
 
-  fakultas fakultas @relation(fields: [id_fakultas], references: [id])
+  sessions Session[]
+  accounts Account[]
 
-  kurikulum                        kurikulum[]
-  dosen                            dosen[]
-  akun                             akun[]
-  profil_lulusan                   profil_lulusan[]
-  capaian_pembelajaran_lulusan     capaian_pembelajaran_lulusan[]
-  bahan_kajian                     bahan_kajian[]
-  mata_kuliah                      mata_kuliah[]
-  capaian_pembelajaran_mata_kuliah capaian_pembelajaran_mata_kuliah[]
-  kaprodi                          kaprodi[]
-
-  createdBy akun? @relation("program_studi_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("program_studi_updated_by", fields: [updated_by], references: [id])
-
-  @@map("program_studi")
+  @@map("user")
 }
 
-model profil_lulusan {
-  id                String    @id @default(uuid())
-  kode              String    @unique @db.VarChar(10)
-  deskripsi         String
-  deskripsi_inggris String
-  tahun             Int
-  created_by        String?   @db.Uuid
-  updated_by        String?   @db.Uuid
-  created_at        DateTime  @default(now())
-  updated_at        DateTime?
-  id_prodi          String
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  prodi  program_studi @relation(fields: [id_prodi], references: [id])
-  pl_cpl pl_cpl[]
-
-  createdBy akun? @relation("profil_lulusan_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("profil_lulusan_updated_by", fields: [updated_by], references: [id])
-
-  @@map("profil_lulusan")
+  @@map("session")
 }
 
-model capaian_pembelajaran_lulusan {
-  id                String    @id @default(uuid())
-  kode              String    @db.VarChar(10)
-  deskripsi         String
-  deskripsi_inggris String
-  tahun             Int
-  created_by        String?   @db.Uuid
-  updated_by        String?   @db.Uuid
-  created_at        DateTime  @default(now())
-  updated_at        DateTime?
-  id_prodi          String
+model Account {
+  id           String    @id
+  userId       String
+  accountId    String
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  password     String?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  prodi    program_studi @relation(fields: [id_prodi], references: [id])
-  pl_cpl   pl_cpl[]
-  cpl_bk   cpl_bk[]
-  cpl_mk   cpl_mk[]
-  cpl_cpmk cpl_cpmk[]
-
-  createdBy akun? @relation("cpl_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("cpl_updated_by", fields: [updated_by], references: [id])
-
-  @@map("capaian_pembelajaran_lulusan")
+  @@map("account")
 }
 
-model bahan_kajian {
-  id                String    @id @default(uuid())
-  kode              String    @unique @db.VarChar(10)
-  nama              String    @unique @db.VarChar(60)
-  deskripsi         String
-  deskripsi_inggris String
-  tahun             Int
-  created_by        String?   @db.Uuid
-  updated_by        String?   @db.Uuid
-  created_at        DateTime  @default(now())
-  updated_at        DateTime?
-  id_prodi          String
-
-  prodi  program_studi @relation(fields: [id_prodi], references: [id])
-  cpl_bk cpl_bk[]
-  mk_bk  mk_bk[]
-
-  createdBy akun? @relation("bahan_kajian_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("bahan_kajian_updated_by", fields: [updated_by], references: [id])
-
-  @@map("bahan_kajian")
-}
-
-model mata_kuliah {
-  id                String    @id @default(uuid())
-  kode              String    @unique @db.VarChar(10)
-  akronim           String    @unique @db.VarChar(10)
-  nama              String    @db.VarChar(60)
-  deskripsi         String
-  deskripsi_inggris String
-  created_by        String?   @db.Uuid
-  updated_by        String?   @db.Uuid
-  created_at        DateTime  @default(now())
-  updated_at        DateTime?
-  id_prodi          String
-  id_jenis_mk       String
-
-  prodi              program_studi           @relation(fields: [id_prodi], references: [id])
-  jenis              jenis_mata_kuliah       @relation(fields: [id_jenis_mk], references: [id])
-  detail_mata_kuliah detail_mata_kuliah[]
-  cpl_mk             cpl_mk[]
-  mk_bk              mk_bk[]
-  mk_prasyarat       mata_kuliah_prasyarat[] @relation("mk_prasyarat_mk")
-  mk_syarat          mata_kuliah_prasyarat[] @relation("mk_prasyarat_syarat")
-  pengampu           pengampu_mata_kuliah[]
-
-  createdBy akun? @relation("mata_kuliah_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("mata_kuliah_updated_by", fields: [updated_by], references: [id])
-
-  @@map("mata_kuliah")
-}
-
-model jenis_mata_kuliah {
-  id     String @id
-  nama   String @unique @db.VarChar(50)
-  urutan Int
-
-  mata_kuliah mata_kuliah[]
-
-  @@map("jenis_mata_kuliah")
-}
-
-model capaian_pembelajaran_mata_kuliah {
-  id                String    @id @default(uuid())
-  kode              String    @unique @db.VarChar(10)
-  deskripsi         String
-  deskripsi_inggris String
-  tahun             Int
-  created_by        String?   @db.Uuid
-  updated_by        String?   @db.Uuid
-  created_at        DateTime  @default(now())
-  updated_at        DateTime?
-  id_prodi          String
-
-  prodi    program_studi                          @relation(fields: [id_prodi], references: [id])
-  sub_cpmk sub_capaian_pembelajaran_mata_kuliah[]
-  cpl_cpmk cpl_cpmk[]
-
-  createdBy akun? @relation("cpmk_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("cpmk_updated_by", fields: [updated_by], references: [id])
-
-  @@map("capaian_pembelajaran_mata_kuliah")
-}
-
-model sub_capaian_pembelajaran_mata_kuliah {
-  id                String    @id @default(uuid())
-  kode              String    @unique @db.VarChar(10)
-  deskripsi         String
-  deskripsi_inggris String
-  bobot             Int
-  indikator         String
-  tahun             Int
-  created_by        String?   @db.Uuid
-  updated_by        String?   @db.Uuid
-  created_at        DateTime  @default(now())
-  updated_at        DateTime?
-  id_cpmk           String
-
-  cpmk capaian_pembelajaran_mata_kuliah @relation(fields: [id_cpmk], references: [id])
-
-  createdBy akun? @relation("sub_cpmk_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("sub_cpmk_updated_by", fields: [updated_by], references: [id])
-
-  @@map("sub_capaian_pembelajaran_mata_kuliah")
-}
-
-model dosen {
-  id         String    @id @default(uuid())
-  nip        String    @unique @db.VarChar(18)
-  nidn       String?   @unique @db.VarChar(18)
-  nama       String    @db.VarChar(100)
-  email      String    @db.VarChar(225)
-  created_by String?   @db.Uuid
-  updated_by String?   @db.Uuid
-  created_at DateTime  @default(now())
-  updated_at DateTime?
-  id_prodi   String
-
-  prodi    program_studi          @relation(fields: [id_prodi], references: [id])
-  kaprodi  kaprodi[]
-  pengampu pengampu_mata_kuliah[]
-
-  createdBy akun? @relation("dosen_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("dosen_updated_by", fields: [updated_by], references: [id])
-
-  @@map("dosen")
-}
-
-model kaprodi {
-  id                   String    @id @default(uuid())
-  tahun_mulai_menjabat Int
-  created_by           String?   @db.Uuid
-  updated_by           String?   @db.Uuid
-  created_at           DateTime
-  updated_at           DateTime?
-  id_prodi             String
-  id_dosen             String
-
-  prodi program_studi @relation(fields: [id_prodi], references: [id])
-  dosen dosen         @relation(fields: [id_dosen], references: [id])
-
-  createdBy akun? @relation("kaprodi_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("kaprodi_updated_by", fields: [updated_by], references: [id])
-
-  @@map("kaprodi")
-}
-
-model akun {
-  id         String    @id @db.Uuid
-  nama       String    @db.VarChar(255)
-  email      String    @db.VarChar(225)
-  avatar_url String?   @db.VarChar(225)
-  id_google  String?   @db.VarChar(225)
-  created_at DateTime  @default(now())
-  updated_at DateTime?
-  id_prodi   String
-
-  prodi program_studi @relation(fields: [id_prodi], references: [id])
-
-  // Relasi balik untuk model 'universitas'
-  universitas_created universitas[] @relation("universitas_created_by")
-  universitas_updated universitas[] @relation("universitas_updated_by")
-
-  // Relasi balik untuk model 'fakultas'
-  fakultas_created fakultas[] @relation("fakultas_created_by")
-  fakultas_updated fakultas[] @relation("fakultas_updated_by")
-
-  // Relasi balik untuk model 'program_studi'
-  program_studi_created program_studi[] @relation("program_studi_created_by")
-  program_studi_updated program_studi[] @relation("program_studi_updated_by")
-
-  // Relasi balik untuk model 'profil_lulusan'
-  profil_lulusan_created profil_lulusan[] @relation("profil_lulusan_created_by")
-  profil_lulusan_updated profil_lulusan[] @relation("profil_lulusan_updated_by")
-
-  // Relasi balik untuk model 'capaian_pembelajaran_lulusan' (cpl)
-  cpl_created capaian_pembelajaran_lulusan[] @relation("cpl_created_by")
-  cpl_updated capaian_pembelajaran_lulusan[] @relation("cpl_updated_by")
-
-  // Relasi balik untuk model 'bahan_kajian'
-  bahan_kajian_created bahan_kajian[] @relation("bahan_kajian_created_by")
-  bahan_kajian_updated bahan_kajian[] @relation("bahan_kajian_updated_by")
-
-  // Relasi balik untuk model 'mata_kuliah'
-  mata_kuliah_created mata_kuliah[] @relation("mata_kuliah_created_by")
-  mata_kuliah_updated mata_kuliah[] @relation("mata_kuliah_updated_by")
-
-  // Relasi balik untuk model 'capaian_pembelajaran_mata_kuliah' (cpmk)
-  cpmk_created capaian_pembelajaran_mata_kuliah[] @relation("cpmk_created_by")
-  cpmk_updated capaian_pembelajaran_mata_kuliah[] @relation("cpmk_updated_by")
-
-  // Relasi balik untuk model 'sub_capaian_pembelajaran_mata_kuliah' (sub_cpmk)
-  sub_cpmk_created sub_capaian_pembelajaran_mata_kuliah[] @relation("sub_cpmk_created_by")
-  sub_cpmk_updated sub_capaian_pembelajaran_mata_kuliah[] @relation("sub_cpmk_updated_by")
-
-  // Relasi balik untuk model 'dosen'
-  dosen_created dosen[] @relation("dosen_created_by")
-  dosen_updated dosen[] @relation("dosen_updated_by")
-
-  // Relasi balik untuk model 'kaprodi'
-  kaprodi_created kaprodi[] @relation("kaprodi_created_by")
-  kaprodi_updated kaprodi[] @relation("kaprodi_updated_by")
-
-  // Relasi balik untuk model 'detail_mata_kuliah'
-  detail_mk_created detail_mata_kuliah[] @relation("detail_mk_created_by")
-  detail_mk_updated detail_mata_kuliah[] @relation("detail_mk_updated_by")
-
-  @@map("akun")
-}
-
-model kurikulum {
-  id       String @id @default(uuid())
-  nama     String @unique @db.VarChar(50)
-  id_prodi String
-  id_ta    String
-
-  prodi       program_studi @relation(fields: [id_prodi], references: [id])
-  tahunAjaran tahun_ajaran  @relation(fields: [id_ta], references: [kode])
-
-  pl_cpl             pl_cpl[]
-  cpl_bk             cpl_bk[]
-  cpl_mk             cpl_mk[]
-  mk_bk              mk_bk[]
-  cpl_cpmk           cpl_cpmk[]
-  detail_mata_kuliah detail_mata_kuliah[]
-  mk_prasyarat       mata_kuliah_prasyarat[]
-  pengampu           pengampu_mata_kuliah[]
-
-  @@map("kurikulum")
-}
-
-model tahun_ajaran {
-  kode String @id @db.VarChar(5)
-  nama String @unique @db.VarChar(20)
-
-  kurikulum kurikulum[]
-
-  @@map("tahun_ajaran")
-}
-
-model detail_mata_kuliah {
-  id           String    @id @default(uuid())
-  sks_teori    Int
-  sks_praktek  Int
-  kategori     kategori
-  semester     Int
-  created_by   String?   @db.Uuid
-  updated_by   String?   @db.Uuid
-  created_at   DateTime  @default(now())
-  updated_at   DateTime?
-  id_mk        String
-  id_kurikulum String
-
-  mata_kuliah mata_kuliah @relation(fields: [id_mk], references: [id])
-  kurikulum   kurikulum   @relation(fields: [id_kurikulum], references: [id])
-
-  createdBy akun? @relation("detail_mk_created_by", fields: [created_by], references: [id])
-  updatedBy akun? @relation("detail_mk_updated_by", fields: [updated_by], references: [id])
-
-  @@map("detail_mata_kuliah")
-}
-
-enum kategori {
-  Wajib
-  Pilihan
-}
-
-model pl_cpl {
-  id           String @id @default(uuid())
-  id_pl        String
-  id_cpl       String
-  id_kurikulum String
-
-  profil_lulusan profil_lulusan               @relation(fields: [id_pl], references: [id])
-  cpl            capaian_pembelajaran_lulusan @relation(fields: [id_cpl], references: [id])
-  kurikulum      kurikulum                    @relation(fields: [id_kurikulum], references: [id])
-
-  @@map("pl_cpl")
-}
-
-model cpl_bk {
-  id           String @id @default(uuid())
-  id_cpl       String
-  id_bk        String
-  id_kurikulum String
-
-  cpl       capaian_pembelajaran_lulusan @relation(fields: [id_cpl], references: [id])
-  bk        bahan_kajian                 @relation(fields: [id_bk], references: [id])
-  kurikulum kurikulum                    @relation(fields: [id_kurikulum], references: [id])
-
-  @@map("cpl_bk")
-}
-
-model cpl_mk {
-  id           String @id @default(uuid())
-  id_cpl       String
-  id_mk        String
-  id_kurikulum String
-
-  cpl       capaian_pembelajaran_lulusan @relation(fields: [id_cpl], references: [id])
-  mk        mata_kuliah                  @relation(fields: [id_mk], references: [id])
-  kurikulum kurikulum                    @relation(fields: [id_kurikulum], references: [id])
-
-  @@map("cpl_mk")
-}
-
-model mk_bk {
-  id           String @id @default(uuid())
-  id_mk        String
-  id_bk        String
-  id_kurikulum String
-
-  mk        mata_kuliah  @relation(fields: [id_mk], references: [id])
-  bk        bahan_kajian @relation(fields: [id_bk], references: [id])
-  kurikulum kurikulum    @relation(fields: [id_kurikulum], references: [id])
-
-  @@map("mk_bk")
-}
-
-model cpl_cpmk {
-  id           String @id @default(uuid())
-  id_cpl       String
-  id_cpmk      String
-  id_kurikulum String
-
-  cpl       capaian_pembelajaran_lulusan     @relation(fields: [id_cpl], references: [id])
-  cpmk      capaian_pembelajaran_mata_kuliah @relation(fields: [id_cpmk], references: [id])
-  kurikulum kurikulum                        @relation(fields: [id_kurikulum], references: [id])
-
-  @@map("cpl_cpmk")
-}
-
-model mata_kuliah_prasyarat {
-  id           String @id @default(uuid())
-  id_mk        String
-  id_mk_syarat String
-  id_kurikulum String
-
-  mk        mata_kuliah @relation("mk_prasyarat_mk", fields: [id_mk], references: [id])
-  mk_syarat mata_kuliah @relation("mk_prasyarat_syarat", fields: [id_mk_syarat], references: [id])
-  kurikulum kurikulum   @relation(fields: [id_kurikulum], references: [id])
-
-  @@map("mata_kuliah_prasyarat")
-}
-
-model pengampu_mata_kuliah {
-  id           String @id @default(uuid())
-  tahun        Int
-  id_mk        String
-  id_kurikulum String
-  id_dosen     String
-
-  mk        mata_kuliah @relation(fields: [id_mk], references: [id])
-  kurikulum kurikulum   @relation(fields: [id_kurikulum], references: [id])
-  dosen     dosen       @relation(fields: [id_dosen], references: [id])
-
-  @@map("pengampu_mata_kuliah")
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  @@map("verification")
 }

@@ -2,11 +2,11 @@ import prisma from "../infrastructures/db.infrastructure";
 
 export default class AkunRepository {
 	public static async findAll() {
-		return prisma.akun.findMany();
+		return prisma.user.findMany();
 	}
 
 	public static async findByID(id: string) {
-		return prisma.akun.findUnique({
+		return prisma.user.findUnique({
 			where: { id },
 		});
 	}
@@ -17,12 +17,13 @@ export default class AkunRepository {
 		email: string,
         id_prodi: string
 	) {
-		return prisma.akun.create({
+		return prisma.user.create({
 			data: {
 				id,
-				nama,
+				name: nama,
                 email,
                 id_prodi,
+                emailVerified: true, // Assuming trusted source for now
 			},
 		});
 	}
@@ -33,14 +34,14 @@ export default class AkunRepository {
         email: string,
         id_prodi: string
 	) {
-		return prisma.akun.update({
+		return prisma.user.update({
 			where: { id },
-			data: { nama, email, id_prodi, updated_at: new Date() },
+			data: { name: nama, email, id_prodi },
 		});
 	}
 
 	public static async destroy(id: string) {
-		return prisma.akun.delete({
+		return prisma.user.delete({
 			where: { id },
 		});
 	}
