@@ -7,16 +7,37 @@ import LogMiddleware from "./middlewares/log.middleware";
 import AuthMiddleware from "./middlewares/auth.middleware";
 import universitasRoute from "./routes/universitas.route";
 import fakultasRoute from "./routes/fakultas.route";
+import { auth } from "./auth";
 
 // Init Hono Object and Load environment variables from .env file
 const app: Hono<BlankEnv, BlankSchema, "/"> = new Hono({
   router: new RegExpRouter(),
 });
-// import { auth } from "./auth";
 
-// app.on(["POST", "GET"], "/api/auth/**", (c) => {
-//     return auth.handler(c.req.raw);
-// });
+// Handler untuk better-auth dengan dukungan Origin header
+app.on(["POST", "GET"], "/api/auth/**", async (c) => {
+  let request = c.req.raw;
+
+  // Jika Origin header tidak ada, tambahkan berdasarkan baseURL (yang sudah ada di trustedOrigins)
+  if (!request.headers.get("Origin")) {
+    const baseURL = process.env.BETTER_AUTH_URL || process.env.BASE_URL || `http://localhost:${process.env.APP_PORT || 5000}`;
+
+    // Clone headers dan tambahkan Origin
+    const headers = new Headers(request.headers);
+    headers.set("Origin", baseURL);
+
+    // Buat request baru dengan Origin header, pastikan body di-clone dengan benar
+    request = new Request(request.url, {
+      method: request.method,
+      headers: headers,
+      body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : null,
+      redirect: request.redirect,
+    });
+  }
+
+  return auth.handler(request);
+});
+
 const { APP_PORT }: NodeJS.ProcessEnv = process.env;
 
 // Load all available middlewares

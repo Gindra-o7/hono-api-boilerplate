@@ -1,5 +1,5 @@
 {
-  "name": "hono-api-kerja-praktik",
+  "name": "hono-api-pmb-stie-mahardhika",
   "scripts": {
     "dev": "bun run --hot src/index.ts"
   },
