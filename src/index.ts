@@ -4,39 +4,30 @@ import { BlankEnv, BlankSchema } from "hono/types";
 import GlobalHandler from "./handlers/global.handler";
 import globalRoute from "./routes/global.route";
 import LogMiddleware from "./middlewares/log.middleware";
-import AuthMiddleware from "./middlewares/auth.middleware";
 import universitasRoute from "./routes/universitas.route";
 import fakultasRoute from "./routes/fakultas.route";
 import { auth } from "./auth";
+import { cors } from "hono/cors";
 
 // Init Hono Object and Load environment variables from .env file
 const app: Hono<BlankEnv, BlankSchema, "/"> = new Hono({
   router: new RegExpRouter(),
 });
 
-// Handler untuk better-auth dengan dukungan Origin header
-// Mendukung semua HTTP methods (GET, POST, PUT, DELETE, etc.)
-app.on(["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], "/api/auth/**", async (c) => {
-  let request = c.req.raw;
+app.use(
+	"/api/auth/*", // or replace with "*" to enable cors for all routes
+	cors({
+		origin: "http://localhost:3001", // replace with your origin
+		allowHeaders: ["Content-Type", "Authorization"],
+		allowMethods: ["POST", "GET", "OPTIONS"],
+		exposeHeaders: ["Content-Length"],
+		maxAge: 600,
+		credentials: true,
+	}),
+);
 
-  // Jika Origin header tidak ada, tambahkan berdasarkan baseURL (yang sudah ada di trustedOrigins)
-  if (!request.headers.get("Origin")) {
-    const baseURL = process.env.BETTER_AUTH_URL || process.env.BASE_URL || `http://localhost:${process.env.APP_PORT || 5000}`;
-
-    // Clone headers dan tambahkan Origin
-    const headers = new Headers(request.headers);
-    headers.set("Origin", baseURL);
-
-    // Buat request baru dengan Origin header, pastikan body di-clone dengan benar
-    request = new Request(request.url, {
-      method: request.method,
-      headers: headers,
-      body: request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'OPTIONS' ? request.body : null,
-      redirect: request.redirect,
-    });
-  }
-
-  return auth.handler(request);
+app.on(["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], "/api/auth/*", (c) => {
+  return auth.handler(c.req.raw);
 });
 
 const { APP_PORT }: NodeJS.ProcessEnv = process.env;
