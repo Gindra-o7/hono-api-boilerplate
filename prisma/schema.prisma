@@ -35,12 +35,18 @@ model fakultas {
   @@map("fakultas")
 }
 
+enum Role {
+  pendaftar
+  admin
+  koordinator
+}
 model User {
   id            String    @id @default(uuid())
   name          String    @db.VarChar(255)
   email         String    @unique @db.VarChar(225)
   emailVerified Boolean
   image         String?
+  role          Role      @default(pendaftar)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime? @updatedAt
 
@@ -52,7 +58,7 @@ model User {
 
 model Session {
   id        String   @id
-  token     String
+  token     String   @unique
   userId    String
   expiresAt DateTime
   ipAddress String?

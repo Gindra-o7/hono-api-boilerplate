@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./infrastructures/db.infrastructure";
 
-const baseURL = process.env.BETTER_AUTH_URL || process.env.BASE_URL || `http://localhost:${process.env.APP_PORT || 5000}`;
+const baseURL = process.env.BETTER_AUTH_URL || `http://localhost:${process.env.APP_PORT || 5000}`;
 const defaultTrustedOrigins = [
     baseURL,
     'http://localhost:3000',

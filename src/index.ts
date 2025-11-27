@@ -15,7 +15,8 @@ const app: Hono<BlankEnv, BlankSchema, "/"> = new Hono({
 });
 
 // Handler untuk better-auth dengan dukungan Origin header
-app.on(["POST", "GET"], "/api/auth/**", async (c) => {
+// Mendukung semua HTTP methods (GET, POST, PUT, DELETE, etc.)
+app.on(["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], "/api/auth/**", async (c) => {
   let request = c.req.raw;
 
   // Jika Origin header tidak ada, tambahkan berdasarkan baseURL (yang sudah ada di trustedOrigins)
@@ -30,7 +31,7 @@ app.on(["POST", "GET"], "/api/auth/**", async (c) => {
     request = new Request(request.url, {
       method: request.method,
       headers: headers,
-      body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : null,
+      body: request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'OPTIONS' ? request.body : null,
       redirect: request.redirect,
     });
   }
