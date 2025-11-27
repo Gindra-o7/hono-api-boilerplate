@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -35,58 +36,61 @@ model fakultas {
   @@map("fakultas")
 }
 
-enum Role {
-  pendaftar
-  admin
-  koordinator
-}
 model User {
-  id            String    @id @default(uuid())
-  name          String    @db.VarChar(255)
-  email         String    @unique @db.VarChar(225)
-  emailVerified Boolean
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
   image         String?
-  role          Role      @default(pendaftar)
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime? @updatedAt
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
 
-  sessions Session[]
-  accounts Account[]
+  role       String?
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
 
+  @@unique([email])
   @@map("user")
 }
 
 model Session {
   id        String   @id
-  token     String   @unique
-  userId    String
   expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   ipAddress String?
   userAgent String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  impersonatedBy String?
+
+  @@unique([token])
+  @@index([userId])
   @@map("session")
 }
 
 model Account {
-  id           String    @id
-  userId       String
-  accountId    String
-  providerId   String
-  accessToken  String?
-  refreshToken String?
-  accessTokenExpiresAt DateTime?
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
-  expiresAt    DateTime?
-  scope        String?
-  idToken      String?
-  password     String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime? @updatedAt
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
+  @@index([userId])
   @@map("account")
 }
 
@@ -96,7 +100,8 @@ model Verification {
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime? @updatedAt 
+  updatedAt  DateTime @updatedAt
 
+  @@index([identifier])
   @@map("verification")
 }
